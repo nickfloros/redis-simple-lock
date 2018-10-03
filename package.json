@@ -1,0 +1,23 @@
+{
+  "name": "redis-simple-lock",
+  "version": "0.0.1",
+  "description": "implementation of a simple locking mechanism",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nickfloros/redis-simple-lock.git"
+  },
+  "keywords": [
+    "redis",
+    "lock"
+  ],
+  "author": "Nick Floros",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/nickfloros/redis-simple-lock/issues"
+  },
+  "homepage": "https://github.com/nickfloros/redis-simple-lock#readme"
+}
