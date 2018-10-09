@@ -1,51 +1,61 @@
+const EventEmiiter = require('events');
 
-'use strict';
-
-const redis = require('redis');
-const EventEmitter = require('events');
-const redisClient = redis.createClient(REDIS_PORT);
-const LOCK_TTL = 20000 ;
+const LOCK_TTL = 20000;
 const LOCK_CHECK_INTERVAL = 10000;
 
-class RedisLockEvent extends EventEmitter{};
+class RedisLock extends EventEmiiter {
+	constructor(params) {
+		super(params);
+		this._redisClient = params.redisClient;
+		this._lockName = params.lockName;
+		this._lockId = params.id;
+		this._monitorHandler = null;
 
-let monitorHandler=null;
-let
-module.exports = {
-	monitor : (rClient, lockName, myId)=>{
-		// check if lock is set ..
-		monitorHandler = setInterval(()=>{
-			redisClient.get(lockName,(err,obj)=>{
+		this._lockCheckInterval = params.lockCheckInterval || LOCK_CHECK_INTERVAL;
+		this._lockExpire = params.lockExpire || LOCK_TTL;
+	}
+
+	monitor() {
+
+		if (this._monitorHandler) {
+			return;
+		}
+
+		this._monitorHandler = setInterval(() => {
+			this._redisClient.get(this._lockName, (err, obj) => {
+				console.log('monitor ', obj);
 				if (!obj) {
-					masterSvcEvent.emit('no-master');
+					this.emit('no-master');
 				}
 
-				if (obj ==== myId) {
-					// extend by 20 seconds 
-					redisClient.pexpire(lockName,LOCK_TTL,(err,obj)=>{ 
+				if (obj === this._lockId) {
+					this._redisClient.pexpire(this._lockName, this._lockExpire, (err, obj) => {
+						console.log('pexipre ... ',err, obj);
 					});
 				}
-			})
-		},LOCK_CHECK_INTERVAL); // check every 10 seconds ... 
+			});
+		}, this._lockCheckInterval);
 
-		return masterSvcEvent;
-	},
-	stopMonitor: ()=> 
-		if (monitorHander) {
-			clearInterval(monitorHandler);
-		}
-		monitorHandler=null;
-	},
-	register : (lockName,myId)=>{
-
-		redisClient.send_command('SET',[lockName,myId,'NX','PX',30000],(err,obj)=>{
-			if (obj====myId) {
-				masterSvcEvent.emit('master');
-			}
-			else {
-				masterSvcEvent.emit('not-registereds');
-			}
-		});
-		return masterSvcEvent;
 	}
-};
+
+	stopMonitor() {
+		if (this._monitorHandler) {
+			clearInterval(this._monitorHandler);
+		}
+
+		this._monitorHandler = nul;
+	}
+
+	register() {
+		this._redisClient.set(this._lockName, this._lockId,
+			'NX', 'PX', this._lockExpire, (err, obj) => {
+				if (obj === 'OK') {
+					this.emit('master');
+				} else {
+					this.emit('not-registered');
+				}
+			});
+	}
+}
+
+module.exports = RedisLock;
